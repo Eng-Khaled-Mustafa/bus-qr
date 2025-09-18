@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operator 45 — QR Search</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial; margin:0; background:#f7f7f8; }
+    header { padding: 16px; background:white; box-shadow: 0 1px 8px rgba(0,0,0,.06); display:flex; gap:16px; align-items:center; flex-wrap: wrap; }
+    .brand { font-weight:700; font-size:18px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .toolbar { display:flex; gap:8px; flex-wrap: wrap; align-items:center; }
+    input[type="search"], select { padding:12px 14px; border-radius:12px; border:1px solid #dbe0ea; font-size:16px; outline:none; }
+    input[type="search"] { flex:1; min-width:220px; }
+    select { min-width:220px; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid #e5e7eb; background:white; text-decoration:none; }
+    .card { background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; max-width:420px; }
+    .bus { font-weight:700; font-size:16px; }
+    .viewer { margin-top:18px; background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; }
+    .muted { color:#64748b; font-size:12px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Operator 45 — QR Search</div>
+    <a class="btn" href="index.html">← Back</a>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Type exact bus number…" autocomplete="off">
+      <select id="busSelect"><option value="">— choose bus —</option></select>
+      <a class="btn" id="openBtn" href="#" target="_blank">Open</a>
+      <a class="btn" id="previewBtn" href="#">Preview</a>
+      <a class="btn" href="#" onclick="clearAll(); return false;">Clear</a>
+    </div>
+    <div id="single" class="hidden"></div>
+    <div id="viewer" class="viewer hidden">
+      <div class="muted">Preview:</div>
+      <div id="preview"></div>
+    </div>
+  </main>
+  <script>
+    // Inline data (no fetch)
+    const DATA = [{"bus": "7321452", "path": "assets/qr/45/7321452.png"}, {"bus": "7321552", "path": "assets/qr/45/7321552.png"}, {"bus": "7321652", "path": "assets/qr/45/7321652.png"}, {"bus": "7321752", "path": "assets/qr/45/7321752.png"}, {"bus": "7441034", "path": "assets/qr/45/7441034.png"}, {"bus": "7441134", "path": "assets/qr/45/7441134.png"}, {"bus": "7441234", "path": "assets/qr/45/7441234.png"}, {"bus": "7441334", "path": "assets/qr/45/7441334.png"}, {"bus": "7466834", "path": "assets/qr/45/7466834.png"}, {"bus": "9033930", "path": "assets/qr/45/9033930.png"}, {"bus": "9034030", "path": "assets/qr/45/9034030.png"}, {"bus": "9034130", "path": "assets/qr/45/9034130.png"}, {"bus": "23964601", "path": "assets/qr/45/23964601.png"}, {"bus": "23964701", "path": "assets/qr/45/23964701.png"}, {"bus": "25965403", "path": "assets/qr/45/25965403.png"}, {"bus": "25966603", "path": "assets/qr/45/25966603.png"}, {"bus": "25989703", "path": "assets/qr/45/25989703.png"}, {"bus": "25991803", "path": "assets/qr/45/25991803.png"}, {"bus": "25991903", "path": "assets/qr/45/25991903.png"}, {"bus": "25998703", "path": "assets/qr/45/25998703.png"}, {"bus": "25998903", "path": "assets/qr/45/25998903.png"}, {"bus": "25999003", "path": "assets/qr/45/25999003.png"}, {"bus": "31616301", "path": "assets/qr/45/31616301.png"}, {"bus": "31616401", "path": "assets/qr/45/31616401.png"}, {"bus": "31616501", "path": "assets/qr/45/31616501.png"}, {"bus": "31616601", "path": "assets/qr/45/31616601.png"}, {"bus": "31616701", "path": "assets/qr/45/31616701.png"}, {"bus": "31616801", "path": "assets/qr/45/31616801.png"}, {"bus": "36788101", "path": "assets/qr/45/36788101.png"}, {"bus": "36788201", "path": "assets/qr/45/36788201.png"}, {"bus": "36788301", "path": "assets/qr/45/36788301.png"}, {"bus": "36788401", "path": "assets/qr/45/36788401.png"}, {"bus": "36788501", "path": "assets/qr/45/36788501.png"}, {"bus": "40084703", "path": "assets/qr/45/40084703.png"}, {"bus": "40084803", "path": "assets/qr/45/40084803.png"}, {"bus": "40084903", "path": "assets/qr/45/40084903.png"}, {"bus": "40219203", "path": "assets/qr/45/40219203.png"}, {"bus": "40219303", "path": "assets/qr/45/40219303.png"}, {"bus": "40237603", "path": "assets/qr/45/40237603.png"}, {"bus": "40237703", "path": "assets/qr/45/40237703.png"}, {"bus": "56257901", "path": "assets/qr/45/56257901.png"}, {"bus": "56258001", "path": "assets/qr/45/56258001.png"}, {"bus": "65224901", "path": "assets/qr/45/65224901.png"}, {"bus": "66082301", "path": "assets/qr/45/66082301.png"}, {"bus": "66082401", "path": "assets/qr/45/66082401.png"}, {"bus": "66082501", "path": "assets/qr/45/66082501.png"}, {"bus": "66082601", "path": "assets/qr/45/66082601.png"}, {"bus": "66082701", "path": "assets/qr/45/66082701.png"}, {"bus": "66082801", "path": "assets/qr/45/66082801.png"}, {"bus": "66082901", "path": "assets/qr/45/66082901.png"}, {"bus": "89303002", "path": "assets/qr/45/89303002.png"}, {"bus": "89308802", "path": "assets/qr/45/89308802.png"}, {"bus": "89308902", "path": "assets/qr/45/89308902.png"}, {"bus": "89309102", "path": "assets/qr/45/89309102.png"}];
+
+    let selected = null;
+
+    function normalize(s) { return (s||'').toString().trim().toLowerCase(); }
+
+    function clearAll() {
+      document.getElementById('q').value = '';
+      document.getElementById('busSelect').value = '';
+      document.getElementById('single').classList.add('hidden');
+      document.getElementById('single').innerHTML = '';
+      document.getElementById('viewer').classList.add('hidden');
+      document.getElementById('preview').innerHTML = '';
+      selected = null;
+      document.getElementById('openBtn').href = '#';
+    }
+
+    function populateSelect() {
+      const sel = document.getElementById('busSelect');
+      sel.innerHTML = '<option value="">— choose bus —</option>';
+      DATA.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.bus;
+        opt.textContent = item.bus;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderOne(item) {
+      const box = document.getElementById('single');
+      box.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('div');
+      title.className = 'bus';
+      title.textContent = item.bus;
+      const openBtn = document.createElement('a');
+      openBtn.className = 'btn';
+      openBtn.href = item.path;
+      openBtn.target = '_blank';
+      openBtn.textContent = 'Open file';
+      const previewBtn = document.createElement('a');
+      previewBtn.className = 'btn';
+      previewBtn.href = '#';
+      previewBtn.textContent = 'Preview';
+      previewBtn.onclick = (e) => { e.preventDefault(); showPreview(item); };
+      card.appendChild(title);
+      const row = document.createElement('div');
+      row.appendChild(openBtn);
+      row.appendChild(previewBtn);
+      card.appendChild(row);
+      box.appendChild(card);
+      box.classList.remove('hidden');
+      selected = item;
+      document.getElementById('openBtn').href = item.path;
+    }
+
+    function showPreview(item) {
+      const viewer = document.getElementById('viewer');
+      const box = document.getElementById('preview');
+      box.innerHTML = '';
+      const isPDF = item.path.toLowerCase().endsWith('.pdf');
+      if (isPDF) {
+        const iframe = document.createElement('iframe');
+        iframe.src = item.path;
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        iframe.style.border = '0';
+        box.appendChild(iframe);
+      } else {
+        const img = document.createElement('img');
+        img.src = item.path;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        box.appendChild(img);
+      }
+      viewer.classList.remove('hidden');
+      // Sync dropdown value
+      const sel = document.getElementById('busSelect');
+      if (sel.value !== item.bus) sel.value = item.bus;
+    }
+
+    // Events
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'busSelect') {
+        const v = e.target.value;
+        const hit = DATA.find(x => x.bus === v);
+        if (hit) { renderOne(hit); showPreview(hit); }
+      }
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (selected) showPreview(selected);
+    });
+
+    document.getElementById('q').addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (!q) { clearAll(); return; }
+      const norm = normalize(q);
+      // exact match only
+      const hit = DATA.find(x => normalize(x.bus) === norm);
+      if (hit) { renderOne(hit); showPreview(hit); }
+      else {
+        // no exact -> hide
+        const single = document.getElementById('single');
+        single.classList.add('hidden');
+        single.innerHTML = '';
+        document.getElementById('viewer').classList.add('hidden');
+        document.getElementById('preview').innerHTML = '';
+        selected = null;
+        document.getElementById('openBtn').href = '#';
+      }
+    });
+
+    // Init
+    populateSelect();
+  </script>
+</body>
+</html>

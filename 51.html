@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operator 51 — QR Search</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial; margin:0; background:#f7f7f8; }
+    header { padding: 16px; background:white; box-shadow: 0 1px 8px rgba(0,0,0,.06); display:flex; gap:16px; align-items:center; flex-wrap: wrap; }
+    .brand { font-weight:700; font-size:18px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .toolbar { display:flex; gap:8px; flex-wrap: wrap; align-items:center; }
+    input[type="search"], select { padding:12px 14px; border-radius:12px; border:1px solid #dbe0ea; font-size:16px; outline:none; }
+    input[type="search"] { flex:1; min-width:220px; }
+    select { min-width:220px; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid #e5e7eb; background:white; text-decoration:none; }
+    .card { background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; max-width:420px; }
+    .bus { font-weight:700; font-size:16px; }
+    .viewer { margin-top:18px; background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; }
+    .muted { color:#64748b; font-size:12px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Operator 51 — QR Search</div>
+    <a class="btn" href="index.html">← Back</a>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Type exact bus number…" autocomplete="off">
+      <select id="busSelect"><option value="">— choose bus —</option></select>
+      <a class="btn" id="openBtn" href="#" target="_blank">Open</a>
+      <a class="btn" id="previewBtn" href="#">Preview</a>
+      <a class="btn" href="#" onclick="clearAll(); return false;">Clear</a>
+    </div>
+    <div id="single" class="hidden"></div>
+    <div id="viewer" class="viewer hidden">
+      <div class="muted">Preview:</div>
+      <div id="preview"></div>
+    </div>
+  </main>
+  <script>
+    // Inline data (no fetch)
+    const DATA = [{"bus": "2087064", "path": "assets/qr/51/2087064.png"}, {"bus": "5853655", "path": "assets/qr/51/5853655.png"}, {"bus": "6714070", "path": "assets/qr/51/6714070.png"}, {"bus": "9033430", "path": "assets/qr/51/9033430.png"}, {"bus": "9033530", "path": "assets/qr/51/9033530.png"}, {"bus": "40238003", "path": "assets/qr/51/40238003.png"}, {"bus": "40238103", "path": "assets/qr/51/40238103.png"}, {"bus": "49890902", "path": "assets/qr/51/49890902.png"}, {"bus": "54123701", "path": "assets/qr/51/54123701.png"}, {"bus": "79969902", "path": "assets/qr/51/79969902.png"}, {"bus": "79970002", "path": "assets/qr/51/79970002.png"}, {"bus": "91207001", "path": "assets/qr/51/91207001.png"}];
+
+    let selected = null;
+
+    function normalize(s) { return (s||'').toString().trim().toLowerCase(); }
+
+    function clearAll() {
+      document.getElementById('q').value = '';
+      document.getElementById('busSelect').value = '';
+      document.getElementById('single').classList.add('hidden');
+      document.getElementById('single').innerHTML = '';
+      document.getElementById('viewer').classList.add('hidden');
+      document.getElementById('preview').innerHTML = '';
+      selected = null;
+      document.getElementById('openBtn').href = '#';
+    }
+
+    function populateSelect() {
+      const sel = document.getElementById('busSelect');
+      sel.innerHTML = '<option value="">— choose bus —</option>';
+      DATA.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.bus;
+        opt.textContent = item.bus;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderOne(item) {
+      const box = document.getElementById('single');
+      box.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('div');
+      title.className = 'bus';
+      title.textContent = item.bus;
+      const openBtn = document.createElement('a');
+      openBtn.className = 'btn';
+      openBtn.href = item.path;
+      openBtn.target = '_blank';
+      openBtn.textContent = 'Open file';
+      const previewBtn = document.createElement('a');
+      previewBtn.className = 'btn';
+      previewBtn.href = '#';
+      previewBtn.textContent = 'Preview';
+      previewBtn.onclick = (e) => { e.preventDefault(); showPreview(item); };
+      card.appendChild(title);
+      const row = document.createElement('div');
+      row.appendChild(openBtn);
+      row.appendChild(previewBtn);
+      card.appendChild(row);
+      box.appendChild(card);
+      box.classList.remove('hidden');
+      selected = item;
+      document.getElementById('openBtn').href = item.path;
+    }
+
+    function showPreview(item) {
+      const viewer = document.getElementById('viewer');
+      const box = document.getElementById('preview');
+      box.innerHTML = '';
+      const isPDF = item.path.toLowerCase().endsWith('.pdf');
+      if (isPDF) {
+        const iframe = document.createElement('iframe');
+        iframe.src = item.path;
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        iframe.style.border = '0';
+        box.appendChild(iframe);
+      } else {
+        const img = document.createElement('img');
+        img.src = item.path;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        box.appendChild(img);
+      }
+      viewer.classList.remove('hidden');
+      // Sync dropdown value
+      const sel = document.getElementById('busSelect');
+      if (sel.value !== item.bus) sel.value = item.bus;
+    }
+
+    // Events
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'busSelect') {
+        const v = e.target.value;
+        const hit = DATA.find(x => x.bus === v);
+        if (hit) { renderOne(hit); showPreview(hit); }
+      }
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (selected) showPreview(selected);
+    });
+
+    document.getElementById('q').addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (!q) { clearAll(); return; }
+      const norm = normalize(q);
+      // exact match only
+      const hit = DATA.find(x => normalize(x.bus) === norm);
+      if (hit) { renderOne(hit); showPreview(hit); }
+      else {
+        // no exact -> hide
+        const single = document.getElementById('single');
+        single.classList.add('hidden');
+        single.innerHTML = '';
+        document.getElementById('viewer').classList.add('hidden');
+        document.getElementById('preview').innerHTML = '';
+        selected = null;
+        document.getElementById('openBtn').href = '#';
+      }
+    });
+
+    // Init
+    populateSelect();
+  </script>
+</body>
+</html>

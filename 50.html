@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operator 50 — QR Search</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial; margin:0; background:#f7f7f8; }
+    header { padding: 16px; background:white; box-shadow: 0 1px 8px rgba(0,0,0,.06); display:flex; gap:16px; align-items:center; flex-wrap: wrap; }
+    .brand { font-weight:700; font-size:18px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .toolbar { display:flex; gap:8px; flex-wrap: wrap; align-items:center; }
+    input[type="search"], select { padding:12px 14px; border-radius:12px; border:1px solid #dbe0ea; font-size:16px; outline:none; }
+    input[type="search"] { flex:1; min-width:220px; }
+    select { min-width:220px; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid #e5e7eb; background:white; text-decoration:none; }
+    .card { background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; max-width:420px; }
+    .bus { font-weight:700; font-size:16px; }
+    .viewer { margin-top:18px; background:white; border:1px solid #e5e7eb; border-radius:14px; padding:12px; }
+    .muted { color:#64748b; font-size:12px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Operator 50 — QR Search</div>
+    <a class="btn" href="index.html">← Back</a>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Type exact bus number…" autocomplete="off">
+      <select id="busSelect"><option value="">— choose bus —</option></select>
+      <a class="btn" id="openBtn" href="#" target="_blank">Open</a>
+      <a class="btn" id="previewBtn" href="#">Preview</a>
+      <a class="btn" href="#" onclick="clearAll(); return false;">Clear</a>
+    </div>
+    <div id="single" class="hidden"></div>
+    <div id="viewer" class="viewer hidden">
+      <div class="muted">Preview:</div>
+      <div id="preview"></div>
+    </div>
+  </main>
+  <script>
+    // Inline data (no fetch)
+    const DATA = [{"bus": "1538988", "path": "assets/qr/50/1538988.png"}, {"bus": "1539088", "path": "assets/qr/50/1539088.png"}, {"bus": "1539188", "path": "assets/qr/50/1539188.png"}, {"bus": "3824855", "path": "assets/qr/50/3824855.png"}, {"bus": "3824955", "path": "assets/qr/50/3824955.png"}, {"bus": "3873488", "path": "assets/qr/50/3873488.png"}, {"bus": "3873588", "path": "assets/qr/50/3873588.png"}, {"bus": "3873888", "path": "assets/qr/50/3873888.png"}, {"bus": "5516378", "path": "assets/qr/50/5516378.png"}, {"bus": "6714670", "path": "assets/qr/50/6714670.png"}, {"bus": "6735770", "path": "assets/qr/50/6735770.png"}, {"bus": "6753870", "path": "assets/qr/50/6753870.png"}, {"bus": "7317352", "path": "assets/qr/50/7317352.png"}, {"bus": "7317652", "path": "assets/qr/50/7317652.png"}, {"bus": "7317752", "path": "assets/qr/50/7317752.png"}, {"bus": "7317852", "path": "assets/qr/50/7317852.png"}, {"bus": "7317952", "path": "assets/qr/50/7317952.png"}, {"bus": "9226933", "path": "assets/qr/50/9226933.png"}, {"bus": "9238033", "path": "assets/qr/50/9238033.png"}, {"bus": "9238133", "path": "assets/qr/50/9238133.png"}, {"bus": "25961603", "path": "assets/qr/50/25961603.png"}, {"bus": "25961703", "path": "assets/qr/50/25961703.png"}, {"bus": "25961803", "path": "assets/qr/50/25961803.png"}, {"bus": "25961903", "path": "assets/qr/50/25961903.png"}, {"bus": "25962003", "path": "assets/qr/50/25962003.png"}, {"bus": "25991303", "path": "assets/qr/50/25991303.png"}, {"bus": "25991503", "path": "assets/qr/50/25991503.png"}, {"bus": "25991603", "path": "assets/qr/50/25991603.png"}, {"bus": "25991703", "path": "assets/qr/50/25991703.png"}, {"bus": "25998803", "path": "assets/qr/50/25998803.png"}, {"bus": "40085103", "path": "assets/qr/50/40085103.png"}, {"bus": "40085203", "path": "assets/qr/50/40085203.png"}, {"bus": "40087203", "path": "assets/qr/50/40087203.png"}, {"bus": "56257001", "path": "assets/qr/50/56257001.png"}, {"bus": "56257101", "path": "assets/qr/50/56257101.png"}, {"bus": "56257201", "path": "assets/qr/50/56257201.png"}, {"bus": "56257301", "path": "assets/qr/50/56257301.png"}, {"bus": "56257401", "path": "assets/qr/50/56257401.png"}, {"bus": "61480202", "path": "assets/qr/50/61480202.png"}, {"bus": "61480302", "path": "assets/qr/50/61480302.png"}, {"bus": "61480402", "path": "assets/qr/50/61480402.png"}, {"bus": "61480502", "path": "assets/qr/50/61480502.png"}, {"bus": "79146002", "path": "assets/qr/50/79146002.png"}, {"bus": "79146102", "path": "assets/qr/50/79146102.png"}, {"bus": "79146202", "path": "assets/qr/50/79146202.png"}, {"bus": "79146302", "path": "assets/qr/50/79146302.png"}, {"bus": "91254401", "path": "assets/qr/50/91254401.png"}, {"bus": "91254501", "path": "assets/qr/50/91254501.png"}, {"bus": "91254601", "path": "assets/qr/50/91254601.png"}, {"bus": "91254701", "path": "assets/qr/50/91254701.png"}, {"bus": "91254801", "path": "assets/qr/50/91254801.png"}];
+
+    let selected = null;
+
+    function normalize(s) { return (s||'').toString().trim().toLowerCase(); }
+
+    function clearAll() {
+      document.getElementById('q').value = '';
+      document.getElementById('busSelect').value = '';
+      document.getElementById('single').classList.add('hidden');
+      document.getElementById('single').innerHTML = '';
+      document.getElementById('viewer').classList.add('hidden');
+      document.getElementById('preview').innerHTML = '';
+      selected = null;
+      document.getElementById('openBtn').href = '#';
+    }
+
+    function populateSelect() {
+      const sel = document.getElementById('busSelect');
+      sel.innerHTML = '<option value="">— choose bus —</option>';
+      DATA.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.bus;
+        opt.textContent = item.bus;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderOne(item) {
+      const box = document.getElementById('single');
+      box.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('div');
+      title.className = 'bus';
+      title.textContent = item.bus;
+      const openBtn = document.createElement('a');
+      openBtn.className = 'btn';
+      openBtn.href = item.path;
+      openBtn.target = '_blank';
+      openBtn.textContent = 'Open file';
+      const previewBtn = document.createElement('a');
+      previewBtn.className = 'btn';
+      previewBtn.href = '#';
+      previewBtn.textContent = 'Preview';
+      previewBtn.onclick = (e) => { e.preventDefault(); showPreview(item); };
+      card.appendChild(title);
+      const row = document.createElement('div');
+      row.appendChild(openBtn);
+      row.appendChild(previewBtn);
+      card.appendChild(row);
+      box.appendChild(card);
+      box.classList.remove('hidden');
+      selected = item;
+      document.getElementById('openBtn').href = item.path;
+    }
+
+    function showPreview(item) {
+      const viewer = document.getElementById('viewer');
+      const box = document.getElementById('preview');
+      box.innerHTML = '';
+      const isPDF = item.path.toLowerCase().endsWith('.pdf');
+      if (isPDF) {
+        const iframe = document.createElement('iframe');
+        iframe.src = item.path;
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        iframe.style.border = '0';
+        box.appendChild(iframe);
+      } else {
+        const img = document.createElement('img');
+        img.src = item.path;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        box.appendChild(img);
+      }
+      viewer.classList.remove('hidden');
+      // Sync dropdown value
+      const sel = document.getElementById('busSelect');
+      if (sel.value !== item.bus) sel.value = item.bus;
+    }
+
+    // Events
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'busSelect') {
+        const v = e.target.value;
+        const hit = DATA.find(x => x.bus === v);
+        if (hit) { renderOne(hit); showPreview(hit); }
+      }
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (selected) showPreview(selected);
+    });
+
+    document.getElementById('q').addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (!q) { clearAll(); return; }
+      const norm = normalize(q);
+      // exact match only
+      const hit = DATA.find(x => normalize(x.bus) === norm);
+      if (hit) { renderOne(hit); showPreview(hit); }
+      else {
+        // no exact -> hide
+        const single = document.getElementById('single');
+        single.classList.add('hidden');
+        single.innerHTML = '';
+        document.getElementById('viewer').classList.add('hidden');
+        document.getElementById('preview').innerHTML = '';
+        selected = null;
+        document.getElementById('openBtn').href = '#';
+      }
+    });
+
+    // Init
+    populateSelect();
+  </script>
+</body>
+</html>
